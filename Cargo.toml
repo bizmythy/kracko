@@ -1,7 +1,11 @@
 [dependencies]
 iced = "0.14.0"
+iced_term = "0.8.0"
 
 [package]
 name = "kracko"
 version = "0.1.0"
 edition = "2024"
+
+[profile.dev.package."*"]
+opt-level = 3
