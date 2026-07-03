@@ -56,15 +56,28 @@ impl App {
     }
 
     pub fn update(&mut self, event: Event) -> Task<Event> {
+        let _span = iced_term::prof::Span::start(format!(
+            "app update {}",
+            match &event {
+                Event::OpenLeft(_) => "OpenLeft",
+                Event::OpenRight(_) => "OpenRight",
+                Event::Close(_) => "Close",
+                Event::Layout(_) => "Layout",
+                Event::Terminal(_) => "Terminal",
+            }
+        ));
         match event {
             Event::OpenLeft(pane) => self.open(pane, Side::Left),
             Event::OpenRight(pane) => self.open(pane, Side::Right),
             Event::Close(pane) => self.close(pane),
-            Event::Layout(event) => match self.layout.update(event) {
-                Some(horizontal_scroll::Action::FocusChanged(pane)) => {
-                    self.focus(pane)
-                },
-                None => Task::none(),
+            Event::Layout(event) => {
+                iced_term::prof::mark(format!("layout event {event:?}"));
+                match self.layout.update(event) {
+                    Some(horizontal_scroll::Action::FocusChanged(pane)) => {
+                        self.focus(pane)
+                    },
+                    None => Task::none(),
+                }
             },
             Event::Terminal(iced_term::Event::BackendCall(id, cmd)) => {
                 let action = match self.tabs.get_mut(&id) {
@@ -92,6 +105,7 @@ impl App {
     }
 
     pub fn view(&'_ self) -> Element<'_, Event> {
+        iced_term::prof::mark("app view");
         let strip = HorizontalScroll::new(
             &self.layout,
             Event::Layout,
